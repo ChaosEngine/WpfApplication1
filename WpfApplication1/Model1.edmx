@@ -1,0 +1,196 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="testModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2008" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="accounts">
+          <Key>
+            <PropertyRef Name="user_id" />
+          </Key>
+          <Property Name="user_id" Type="int" Nullable="false" />
+          <Property Name="user_name" Type="varchar" MaxLength="100" />
+          <Property Name="clear_passwd" Type="varchar" MaxLength="100" />
+          <Property Name="passwd" Type="varchar" MaxLength="100" />
+          <Property Name="dummy" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="Blog">
+          <Key>
+            <PropertyRef Name="BlogId" />
+          </Key>
+          <Property Name="BlogId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Url" Type="nvarchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Post">
+          <Key>
+            <PropertyRef Name="PostId" />
+          </Key>
+          <Property Name="PostId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="BlogId" Type="int" Nullable="false" />
+          <Property Name="Content" Type="nvarchar(max)" />
+          <Property Name="Title" Type="nvarchar(max)" />
+        </EntityType>
+        <!--Errors Found During Generation:
+warning 6013: The table/view 'test.dbo.domains' does not have a primary key defined and no valid primary key could be inferred. This table/view has been excluded. To use the entity, you will need to review your schema, add the correct keys, and uncomment it.
+        <EntityType Name="domains">
+          <Property Name="domain" Type="varchar" MaxLength="100" />
+          <Property Name="cnt" Type="bigint" />
+        </EntityType>-->
+        <Association Name="FK_Post_Blog_BlogId">
+          <End Role="Blog" Type="Self.Blog" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="Post" Type="Self.Post" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Blog">
+              <PropertyRef Name="BlogId" />
+            </Principal>
+            <Dependent Role="Post">
+              <PropertyRef Name="BlogId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Function Name="usp_GetDomains" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="maxCount" Type="int" Mode="In" />
+        </Function>
+        <EntityContainer Name="testModelStoreContainer">
+          <EntitySet Name="accounts" EntityType="Self.accounts" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Blog" EntityType="Self.Blog" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Post" EntityType="Self.Post" Schema="dbo" store:Type="Tables" />
+          <AssociationSet Name="FK_Post_Blog_BlogId" Association="Self.FK_Post_Blog_BlogId">
+            <End Role="Blog" EntitySet="Blog" />
+            <End Role="Post" EntitySet="Post" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="testModel" Alias="Self" p1:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:p1="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityContainer Name="testEntities" p1:LazyLoadingEnabled="true">
+          <EntitySet Name="accounts" EntityType="testModel.accounts" />
+          <FunctionImport Name="GetDomains" ReturnType="Collection(testModel.usp_GetDomains_Result)">
+          <Parameter Name="maxCount" Mode="In" Type="Int32" />
+          </FunctionImport>
+          <EntitySet Name="Blog" EntityType="testModel.Blog" />
+          <EntitySet Name="Post" EntityType="testModel.Post" />
+          <AssociationSet Name="FK_Post_Blog_BlogId" Association="testModel.FK_Post_Blog_BlogId">
+            <End Role="Blog" EntitySet="Blog" />
+            <End Role="Post" EntitySet="Post" />
+          </AssociationSet>
+        </EntityContainer>
+        <EntityType Name="accounts">
+          <Key>
+            <PropertyRef Name="user_id" />
+          </Key>
+          <Property Name="user_id" Type="Int32" Nullable="false" />
+          <Property Name="user_name" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
+          <Property Name="clear_passwd" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
+          <Property Name="passwd" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
+          <Property Name="dummy" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
+        </EntityType>
+        <ComplexType Name="usp_GetDomains_Result">
+          <Property Type="String" Name="domain" Nullable="true" MaxLength="100" />
+          <Property Type="Int64" Name="cnt" Nullable="true" />
+          <Property Type="DateTime" Name="now" Nullable="false" Precision="23" />
+        </ComplexType>
+        <EntityType Name="Blog">
+          <Key>
+            <PropertyRef Name="BlogId" />
+          </Key>
+          <Property Name="BlogId" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Url" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Post" Relationship="testModel.FK_Post_Blog_BlogId" FromRole="Blog" ToRole="Post" />
+        </EntityType>
+        <EntityType Name="Post">
+          <Key>
+            <PropertyRef Name="PostId" />
+          </Key>
+          <Property Name="PostId" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="BlogId" Type="Int32" Nullable="false" />
+          <Property Name="Content" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Title" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Blog" Relationship="testModel.FK_Post_Blog_BlogId" FromRole="Post" ToRole="Blog" />
+        </EntityType>
+        <Association Name="FK_Post_Blog_BlogId">
+          <End Type="testModel.Blog" Role="Blog" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="testModel.Post" Role="Post" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Blog">
+              <PropertyRef Name="BlogId" />
+            </Principal>
+            <Dependent Role="Post">
+              <PropertyRef Name="BlogId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="testModelStoreContainer" CdmEntityContainer="testEntities">
+          <EntitySetMapping Name="accounts">
+            <EntityTypeMapping TypeName="testModel.accounts">
+              <MappingFragment StoreEntitySet="accounts">
+                <ScalarProperty Name="user_id" ColumnName="user_id" />
+                <ScalarProperty Name="user_name" ColumnName="user_name" />
+                <ScalarProperty Name="clear_passwd" ColumnName="clear_passwd" />
+                <ScalarProperty Name="passwd" ColumnName="passwd" />
+                <ScalarProperty Name="dummy" ColumnName="dummy" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <FunctionImportMapping FunctionImportName="GetDomains" FunctionName="testModel.Store.usp_GetDomains" >
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="testModel.usp_GetDomains_Result">
+                <ScalarProperty Name="domain" ColumnName="domain" />
+                <ScalarProperty Name="cnt" ColumnName="cnt" />
+                <ScalarProperty Name="now" ColumnName="now" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <EntitySetMapping Name="Blog">
+            <EntityTypeMapping TypeName="testModel.Blog">
+              <MappingFragment StoreEntitySet="Blog">
+                <ScalarProperty Name="Url" ColumnName="Url" />
+                <ScalarProperty Name="BlogId" ColumnName="BlogId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Post">
+            <EntityTypeMapping TypeName="testModel.Post">
+              <MappingFragment StoreEntitySet="Post">
+                <ScalarProperty Name="Title" ColumnName="Title" />
+                <ScalarProperty Name="Content" ColumnName="Content" />
+                <ScalarProperty Name="BlogId" ColumnName="BlogId" />
+                <ScalarProperty Name="PostId" ColumnName="PostId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="False" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="True" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+        <DesignerProperty Name="UseLegacyProvider" Value="True" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>
