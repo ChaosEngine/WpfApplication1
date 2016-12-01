@@ -78,6 +78,8 @@ namespace WpfApplication1
                     return DatabaseTypeEnum.MSSQL;
                 else if (rbDBaseMssqlEntities.IsChecked.GetValueOrDefault(false))
                     return DatabaseTypeEnum.MSSQL_ENTITIES;
+                else if (rbDBaseOracle.IsChecked.GetValueOrDefault(false))
+                    return DatabaseTypeEnum.ORACLE;
                 else
                     throw new NotSupportedException("Bad DataBaseType");
             }

@@ -1,5 +1,6 @@
 ﻿using MySql.Data.MySqlClient;
 using Npgsql;
+using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Configuration;
 using System.Data;
@@ -11,7 +12,7 @@ using System.Threading;
 
 namespace WpfApplication1
 {
-    public enum DatabaseTypeEnum { MYSQL, POSTGRES, MSSQL, MSSQL_ENTITIES }
+    public enum DatabaseTypeEnum { MYSQL, POSTGRES, MSSQL, MSSQL_ENTITIES, ORACLE }
 
     public interface ISqlTestExecutor
     {
@@ -41,6 +42,8 @@ namespace WpfApplication1
         protected abstract StringBuilder DoWorkMssql(SqlTester data);
 
         protected abstract StringBuilder DoWorkEntities(SqlTester data);
+
+        protected abstract StringBuilder DoWorkOracle(SqlTester data);
 
         protected abstract StringBuilder ExecuteGroupedView();
 
@@ -112,6 +115,10 @@ namespace WpfApplication1
                 case DatabaseTypeEnum.MSSQL_ENTITIES:
                     result = this.DoWorkEntitiesGroupedView(this);
                     break;
+                case DatabaseTypeEnum.ORACLE:
+                    _sqlQuery = string.Concat("SELECT domain, cnt, TO_CHAR(SYSDATE, 'MM-DD-YYYY HH24:MI:SS') now FROM domains where rownum < ", _maxCount);
+                    result = this.DoWorkOracle(this);
+                    break;
                 default:
                     throw new NotSupportedException("Bad DataBaseType");
             }
@@ -148,6 +155,12 @@ namespace WpfApplication1
                     break;
                 case DatabaseTypeEnum.MSSQL_ENTITIES:
                     result = this.DoWorkEntitiesSearcher(this);
+                    break;
+                case DatabaseTypeEnum.ORACLE:
+                    _sqlQuery = string.Concat(@"select user_name, clear_passwd, user_id, TO_CHAR(SYSDATE, 'MM-DD-YYYY HH24:MI:SS') now
+                                                from accounts 
+                                                where clear_passwd like '%", _keyword2Search, "%'");
+                    result = this.DoWorkOracle(this);
                     break;
                 default:
                     throw new NotSupportedException("Bad DataBaseType");
@@ -317,6 +330,28 @@ namespace WpfApplication1
                         .AppendLine();
                 }
                 return sb;
+            }
+        }
+
+        protected override StringBuilder DoWorkOracle(SqlTester data)
+        {
+            if (data._initialSleep.HasValue)
+                Thread.Sleep(data._initialSleep.Value);
+            using (var conn = new OracleConnection(ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString))
+            {
+                conn.Open();
+
+                var sb = new StringBuilder(1000);
+                using (var cmd = new OracleCommand(data._sqlQuery, conn))
+                {
+                    cmd.Prepare();
+                    cmd.CommandType = System.Data.CommandType.Text;
+                    using (OracleDataReader rdr = cmd.ExecuteReader())
+                    {
+                        ProcessReader(rdr, sb);
+                        return sb;
+                    }
+                }
             }
         }
     }//end class
