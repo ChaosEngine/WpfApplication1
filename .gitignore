@@ -9,3 +9,4 @@
 /WpfApplication1/bin/Release
 /WpfApplication1/obj/Release
 *.suo
+/.vs/*
