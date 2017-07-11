@@ -316,5 +316,32 @@ namespace WpfApplication1
             else
                 btnAsync.IsEnabled = false;
         }
-    }
+
+		async Task<double> ComputeStuffAsync()
+		{
+			var tsk = Task.Run(() =>
+			{
+				var sum = 0.0;
+				for (int i = 1; i < (400 * 1000 * 1000); i++)
+				{
+					sum += Math.Sqrt(i);
+				}
+				return sum;
+			});
+			return await tsk;
+		}
+
+		private async void SqrtLoad_Click(object sender, RoutedEventArgs e)
+		{
+			var prev = ((Button)sender).Content;
+			((Button)sender).Content = "SqrtLoad...";
+			((Button)sender).IsEnabled = false;
+
+			var sum = await ComputeStuffAsync();
+
+			OutputResultControl.Text = $"Sqrt sum = {sum}";
+			((Button)sender).Content = prev;
+			((Button)sender).IsEnabled = true;
+		}
+	}
 }
