@@ -193,17 +193,20 @@ namespace WpfApplication1
 			return new StringBuilder(urlContents);
 		}
 
-		async Task<double> ComputeStuffAsync()
+		async Task<double> ComputeStuffAsync(CancellationToken token)
 		{
 			var tsk = Task.Run(() =>
 			{
 				var sum = 0.0;
 				for (int i = 1; i < (400 * 1000 * 1000); i++)
 				{
+					if (token.IsCancellationRequested)
+						return 0;
 					sum += Math.Sqrt(i);
 				}
 				return sum;
-			});
+			}, token);
+
 			return await tsk;
 		}
 
@@ -369,15 +372,37 @@ namespace WpfApplication1
 
 		private async void SqrtLoad_Click(object sender, RoutedEventArgs e)
 		{
+			if (((Button)sender).Content.ToString() == "Cancel")
+			{
+				GetCanellationtokenForButton((Button)sender).Cancel();
+				return;
+			}
+
 			var prev = ((Button)sender).Content;
-			((Button)sender).Content = "SqrtLoad...";
-			((Button)sender).IsEnabled = false;
+			try
+			{
+				((Button)sender).Content = "Cancel";
 
-			var sum = await ComputeStuffAsync();
+				var sum = await ComputeStuffAsync(GetCanellationtokenForButton((Button)sender).Token);
 
-			OutputResultControl.Text = $"Sqrt sum = {sum}";
-			((Button)sender).Content = prev;
-			((Button)sender).IsEnabled = true;
+				OutputResultControl.Text = $"Sqrt sum = {sum}";
+			}
+			catch (Exception ex)
+			{
+				//Show error
+				OutputResultControl.Text = "Error: " + ex.Message;
+			}
+			finally
+			{
+				((Button)sender).Content = prev;
+
+				var cts = GetCanellationtokenForButton((Button)sender);
+				if (cts.IsCancellationRequested)
+				{
+					cts.Dispose();
+					_cancellationTokenSource.Remove(((Button)sender).Name);
+				}
+			}
 		}
 
 		private void thisWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
