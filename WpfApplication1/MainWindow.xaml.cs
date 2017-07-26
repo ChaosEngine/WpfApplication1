@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -120,7 +121,7 @@ namespace WpfApplication1
 			InitializeComponent();
 
 			OutputResultControl = new ResultPrinter(txtDebug);
-			_cancellationTokenSource = new Dictionary<string, CancellationTokenSource>(3);
+			_cancellationTokenSource = new Dictionary<string, CancellationTokenSource>(4);
 		}
 
 		CancellationTokenSource GetCanellationtokenForButton(Button btn)
@@ -359,6 +360,14 @@ namespace WpfApplication1
 				Close();
 		}
 
+		private void thisWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+		{
+			_cancellationTokenSource.Values.ToList().ForEach(x =>
+			{
+				if (x != null) x.Dispose();
+			});
+		}
+
 		private void cmbConcurrentyCount_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
 			int? i = this.ConcurrencyCount;
@@ -405,12 +414,96 @@ namespace WpfApplication1
 			}
 		}
 
-		private void thisWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+		private async Task SyncAcynsWebProcessing(CancellationToken token, int seconds2Run = 60, int threadCount = 50)
 		{
-			_cancellationTokenSource.Values.ToList().ForEach(x =>
+			Stopwatch watch = new Stopwatch(), global_watch = new Stopwatch();
+			int run_times = 0;
+			string url = txtDebug.Text.Trim().Split(new[] { '\r', '\n' }).FirstOrDefault();
+			global_watch.Start();
+
+			while (true)
 			{
-				if (x != null) x.Dispose();
-			});
+				if (!token.IsCancellationRequested &&
+					global_watch.ElapsedMilliseconds > (seconds2Run * 1000))//do this procedure X number of seconds
+					break;
+
+				var all_tasks = new Task<int>[threadCount];
+				watch.Reset();
+				watch.Start();
+				for (int i = 0; i < threadCount; i++)//create-and-run x tasks
+				{
+					all_tasks[i] = Task.Run(async () =>
+					{
+						using (var client = new HttpClient())
+						{
+							var stackContent = await client.GetAsync(url, token);
+							var response = await stackContent.Content.ReadAsStringAsync();
+							return int.Parse(response);
+						}
+					}, token);
+				}
+				//wait for all threads to complete
+				await Task.WhenAll(all_tasks).ContinueWith((all_results) =>
+				{
+					watch.Stop();
+					this.Dispatcher.Invoke(new Action(() =>//run something on UI thread
+					{
+						string comm = "";
+						txtDebug.AppendText(Environment.NewLine);
+						foreach (var res in all_results.Result)
+						{
+							txtDebug.AppendText(comm + res);
+							comm = ",";
+						}
+						txtDebug.AppendText($"{Environment.NewLine}ElapsedMilliseconds: {watch.ElapsedMilliseconds}");
+					}));
+
+					watch.Reset();
+					foreach (Task<int> tsk in all_tasks) tsk.Dispose();
+					all_tasks = null;
+				}, token);
+				//await Task.Delay(250).ConfigureAwait(false);
+				run_times++;
+			}
+
+			this.Dispatcher.Invoke(new Action(() =>//run something on UI thread
+			{
+				txtDebug.AppendText($"{Environment.NewLine}----------{Environment.NewLine}Bottom line summary: {global_watch.ElapsedMilliseconds}"
+					+ $" run {run_times} times");
+			}));
+		}
+
+		private async void btnAsyncWebTest_Click(object sender, EventArgs e)
+		{
+			if (((Button)sender).Content.ToString() == "Cancel")
+			{
+				GetCanellationtokenForButton((Button)sender).Cancel();
+				return;
+			}
+
+			var prev = ((Button)sender).Content;
+			try
+			{
+				((Button)sender).Content = "Cancel";
+
+				await SyncAcynsWebProcessing(GetCanellationtokenForButton((Button)sender).Token);
+			}
+			catch (Exception ex)
+			{
+				//Show error
+				OutputResultControl.Text = "Error: " + ex.Message;
+			}
+			finally
+			{
+				((Button)sender).Content = prev;
+
+				var cts = GetCanellationtokenForButton((Button)sender);
+				if (cts.IsCancellationRequested)
+				{
+					cts.Dispose();
+					_cancellationTokenSource.Remove(((Button)sender).Name);
+				}
+			}
 		}
 	}
 }

@@ -36,6 +36,7 @@
                 <ListBoxItem Content="64"/>
             </ComboBox>
 			<Button x:Name="btnSqrtLoad" Content="SqrtLoad" Grid.Column="1" VerticalAlignment="Top" Height="25" Margin="0,6,0,0" Click="SqrtLoad_Click"/>
+			<Button x:Name="btnAsyncWebTest" Content="Concurrent Web Test" Grid.Column="1" VerticalAlignment="Top" Height="25" Margin="0,6,0,0" Click="btnAsyncWebTest_Click"/>
         </StackPanel>
     </Grid>
 </Window>
