@@ -360,7 +360,7 @@ namespace WpfApplication1
 				Close();
 		}
 
-		private void thisWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+		private void OnWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
 		{
 			_cancellationTokenSource.Values.ToList().ForEach(x =>
 			{
@@ -368,7 +368,7 @@ namespace WpfApplication1
 			});
 		}
 
-		private void cmbConcurrentyCount_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		private void OnConcurrentyCount_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
 			int? i = this.ConcurrencyCount;
 			if (i.HasValue)
@@ -473,7 +473,7 @@ namespace WpfApplication1
 			}));
 		}
 
-		private async void btnAsyncWebTest_Click(object sender, EventArgs e)
+		private async void OnBtnAsyncWebTest_Click(object sender, EventArgs e)
 		{
 			if (((Button)sender).Content.ToString() == "Cancel")
 			{
