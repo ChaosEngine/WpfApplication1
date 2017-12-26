@@ -10,6 +10,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Security.Cryptography.X509Certificates;
+using System.Net.Security;
 
 namespace WpfApplication1
 {
@@ -245,12 +247,15 @@ namespace WpfApplication1
 
 			if (data._initialSleep.HasValue)
 				await Task.Delay(data._initialSleep.Value);
-			
+
 			if (token.IsCancellationRequested)
 				return new StringBuilder("cancelled");
 
+			//string clientCertPath = @"PostgresqlClientCert\postgresql.pfx";
 			using (var conn = new NpgsqlConnection(ConfigurationManager.ConnectionStrings["Postgres"].ConnectionString))
 			{
+				conn.ProvideClientCertificatesCallback = MyProvideClientCertificatesCallback;
+
 				await conn.OpenAsync(token);
 
 				var sb = new StringBuilder(1000);
@@ -266,6 +271,24 @@ namespace WpfApplication1
 					{
 						ProcessReader(rdr, sb);
 						return sb;
+					}
+				}
+			}
+
+			void MyProvideClientCertificatesCallback(X509CertificateCollection clientCerts)
+			{
+				using (X509Store store = new X509Store(StoreLocation.CurrentUser))
+				{
+					store.Open(OpenFlags.ReadOnly | OpenFlags.OpenExistingOnly);
+
+					var currentCerts = store.Certificates;
+					currentCerts = currentCerts.Find(X509FindType.FindByTimeValid, DateTime.Now, false);
+					currentCerts = currentCerts.Find(X509FindType.FindByIssuerName, "theBrain.ca", false);
+					currentCerts = currentCerts.Find(X509FindType.FindBySubjectName, Environment.MachineName, false);
+					if (currentCerts != null && currentCerts.Count > 0)
+					{
+						var cert = currentCerts[0];
+						clientCerts.Add(cert);
 					}
 				}
 			}
@@ -324,7 +347,7 @@ namespace WpfApplication1
 
 			if (data._initialSleep.HasValue)
 				await Task.Delay(data._initialSleep.Value);
-			
+
 			using (testEntities context = new testEntities())
 			{
 				var query = (from e in context.GetDomains(data._maxCount)
@@ -352,7 +375,7 @@ namespace WpfApplication1
 
 			if (data._initialSleep.HasValue)
 				await Task.Delay(data._initialSleep.Value);
-			
+
 			using (testEntities context = new testEntities())
 			{
 				var query = (from acc in context.accounts
@@ -388,7 +411,7 @@ namespace WpfApplication1
 
 			if (data._initialSleep.HasValue)
 				await Task.Delay(data._initialSleep.Value);
-			
+
 			using (var conn = new OracleConnection(ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString))
 			{
 				await conn.OpenAsync(token);

@@ -67,7 +67,6 @@ namespace WpfApplication1
 		}
 
 		private Dictionary<string, CancellationTokenSource> _cancellationTokenSource;
-		private Task tsk;
 
 		IResultPrinterControl OutputResultControl { get; set; }
 

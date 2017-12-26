@@ -19,10 +19,10 @@
 
         <StackPanel Grid.Column="1" Margin="28,118,30,0" VerticalAlignment="Top">
             <RadioButton x:Name="rbDBaseMysql" GroupName="DBaseType" Content="Mysql" IsChecked="True"/>
-            <RadioButton x:Name="rbDBasePostgres" GroupName="DBaseType" Content="Postgres" />
+			<RadioButton x:Name="rbDBasePostgres" GroupName="DBaseType" Content="Postgres" IsChecked="True" />
             <RadioButton x:Name="rbDBaseMssql" GroupName="DBaseType" Content="MsSql" />
-            <RadioButton x:Name="rbDBaseMssqlEntities" GroupName="DBaseType" Content="MsSqlEntities" IsChecked="True" />
-            <RadioButton x:Name="rbDBaseOracle" GroupName="DBaseType" Content="Oracle" IsChecked="True" />
+            <RadioButton x:Name="rbDBaseMssqlEntities" GroupName="DBaseType" Content="MsSqlEntities" />
+            <RadioButton x:Name="rbDBaseOracle" GroupName="DBaseType" Content="Oracle" />
             <ComboBox x:Name="cmbTestType" SelectedIndex="1">
                 <ListBoxItem Content="GroupedView"/>
                 <ListBoxItem Content="Searcher"/>
