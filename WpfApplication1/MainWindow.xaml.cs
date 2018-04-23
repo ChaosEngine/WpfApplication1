@@ -433,11 +433,31 @@ namespace WpfApplication1
 				{
 					all_tasks[i] = Task.Run(async () =>
 					{
-						using (var client = new HttpClient())
+						try
 						{
-							var stackContent = await client.GetAsync(url, token);
-							var response = await stackContent.Content.ReadAsStringAsync();
-							return int.Parse(response);
+							using (var client = new HttpClient())
+							{
+								var stackContent = await client.GetAsync(url, token);
+								var response = await stackContent.Content.ReadAsStringAsync();
+								if (response.Length > 10)
+								{
+									return response.Length;
+								}
+								else
+								{
+									if (int.TryParse(response, out int j))
+										return j;
+									return -1;
+								}
+							}
+						}
+						catch (Exception ex)
+						{
+							this.Dispatcher.Invoke(() =>//run something on UI thread
+							{
+								txtDebug.AppendText(ex.ToString());
+							});
+							return -2;
 						}
 					}, token);
 				}
@@ -445,7 +465,7 @@ namespace WpfApplication1
 				await Task.WhenAll(all_tasks).ContinueWith((all_results) =>
 				{
 					watch.Stop();
-					this.Dispatcher.Invoke(new Action(() =>//run something on UI thread
+					this.Dispatcher.Invoke(() =>//run something on UI thread
 					{
 						string comm = "";
 						txtDebug.AppendText(Environment.NewLine);
@@ -455,7 +475,7 @@ namespace WpfApplication1
 							comm = ",";
 						}
 						txtDebug.AppendText($"{Environment.NewLine}ElapsedMilliseconds: {watch.ElapsedMilliseconds}");
-					}));
+					});
 
 					watch.Reset();
 					foreach (Task<int> tsk in all_tasks) tsk.Dispose();
@@ -465,11 +485,11 @@ namespace WpfApplication1
 				run_times++;
 			}
 
-			this.Dispatcher.Invoke(new Action(() =>//run something on UI thread
+			this.Dispatcher.Invoke(() =>//run something on UI thread
 			{
 				txtDebug.AppendText($"{Environment.NewLine}----------{Environment.NewLine}Bottom line summary: {global_watch.ElapsedMilliseconds}"
 					+ $" run {run_times} times");
-			}));
+			});
 		}
 
 		private async void OnBtnAsyncWebTest_Click(object sender, EventArgs e)
