@@ -7,6 +7,7 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -193,21 +194,91 @@ namespace WpfApplication1
 			return new StringBuilder(urlContents);
 		}
 
-		async Task<double> ComputeStuffAsync(CancellationToken token)
+		async Task<double> ComputeStuffAsync(int? inputCount, CancellationToken token)
 		{
 			var tsk = Task.Run(() =>
 			{
 				var sum = 0.0;
-				for (int i = 1; i < (400 * 1000 * 1000); i++)
+				int DOP = 4;
+				//var count = inputCount ?? 16;
+				var count = inputCount ?? 4 * (100 * 1000 * 1000);
+				long full_range = count / DOP;
+				long reminder = count % DOP + 1;
+
+				if (full_range > 0)
 				{
-					if (token.IsCancellationRequested)
-						return 0;
-					sum += Math.Sqrt(i);
+					Parallel.For(0, DOP, new ParallelOptions { MaxDegreeOfParallelism = DOP, CancellationToken = token },
+						// Initialize the local states
+						() => 0.0,
+						// Accumulate the thread-local computations in the loop body
+						(th, loop, localState) =>
+						{
+							long from = full_range * (th);
+							long to = full_range * (th + 1) - 1;
+
+							var computed = calc(from, to, loop);
+
+							//Dispatcher.Invoke(() =>
+							//{
+							//	OutputResultControl.AppendText($" th = {th}, from = {from}, to = {to}, computed = {computed} {Environment.NewLine}");
+							//});
+
+							return localState + computed;
+						},
+						// Combine all local states
+						localState => Interlocked.Exchange(ref sum, sum + localState)
+					);
 				}
+				if (reminder > 0)
+				{
+					long from = full_range * DOP;
+					long to = from + reminder - 1;
+
+					var computed = calcReminder(from, to);
+					sum += computed;
+				}
+
 				return sum;
 			}, token);
 
 			return await tsk;
+
+			//priv function
+			double calc(long from, long to, ParallelLoopState loop)
+			{
+				double sum = 0;
+				for (long i = from; i <= to && !loop.ShouldExitCurrentIteration; i++)
+				{
+					sum += Math.Sqrt(i);
+					//sum += Approximate.Sqrt(i);
+					//sum += Approximate.Isqrt(i);
+				}
+
+				Dispatcher.Invoke(() =>
+				{
+					OutputResultControl.AppendText($" from = {from}, to = {to}, sum = {sum} {Environment.NewLine}");
+				});
+
+				return sum;
+			}
+
+			double calcReminder(long from, long to)
+			{
+				double sum = 0;
+				for (long i = from; i <= to && !token.IsCancellationRequested; i++)
+				{
+					sum += Math.Sqrt(i);
+					//sum += Approximate.Sqrt(i);
+					//sum += Approximate.Isqrt(i);
+				}
+
+				Dispatcher.Invoke(() =>
+				{
+					OutputResultControl.AppendText($" from = {from}, to = {to}, sum = {sum} {Environment.NewLine}");
+				});
+
+				return sum;
+			}
 		}
 
 		private void Button_Click_1(object sender, RoutedEventArgs e)
@@ -246,30 +317,30 @@ namespace WpfApplication1
 
 							// Display the result. All is ok
 							Dispatcher.Invoke(() =>
-							{
-								OutputResultControl.Text = result.ToString();
-							});
+						{
+							OutputResultControl.Text = result.ToString();
+						});
 						}
 						catch (Exception ex)
 						{
 							//Show error
 							Dispatcher.Invoke(() =>
-							{
-								OutputResultControl.Text = "Error: " + ex.Message;
-							});
+						{
+							OutputResultControl.Text = "Error: " + ex.Message;
+						});
 						}
 					});
 					//All sub-task ended. Notify UI
 					Dispatcher.Invoke(() =>
+				{
+					((Button)sender).Content = prev;
+					var cts = GetCanellationtokenForButton((Button)sender);
+					if (cts.IsCancellationRequested)
 					{
-						((Button)sender).Content = prev;
-						var cts = GetCanellationtokenForButton((Button)sender);
-						if (cts.IsCancellationRequested)
-						{
-							cts.Dispose();
-							_cancellationTokenSource.Remove(((Button)sender).Name);
-						}
-					});
+						cts.Dispose();
+						_cancellationTokenSource.Remove(((Button)sender).Name);
+					}
+				});
 				});
 			}
 			catch (Exception ex)
@@ -391,9 +462,12 @@ namespace WpfApplication1
 			{
 				((Button)sender).Content = "Cancel";
 
-				var sum = await ComputeStuffAsync(GetCanellationtokenForButton((Button)sender).Token);
+				int.TryParse(OutputResultControl.Text, out int count);
 
-				OutputResultControl.Text = $"Sqrt sum = {sum}";
+				var sum = await ComputeStuffAsync(count > 0 ? (int?)count : null,
+					GetCanellationtokenForButton((Button)sender).Token);
+
+				OutputResultControl.AppendText($"Sqrt sum = {sum} {Environment.NewLine}");
 			}
 			catch (Exception ex)
 			{
@@ -524,5 +598,44 @@ namespace WpfApplication1
 				}
 			}
 		}
+	}
+
+	public class Approximate
+	{
+		public static float Sqrt(float z)
+		{
+			if (z == 0) return 0;
+			FloatIntUnion u;
+			u.tmp = 0;
+			u.f = z;
+			u.tmp -= 1 << 23; /* Subtract 2^m. */
+			u.tmp >>= 1; /* Divide by 2. */
+			u.tmp += 1 << 29; /* Add ((b + 1) / 2) * 2^m. */
+			return u.f;
+		}
+
+		[StructLayout(LayoutKind.Explicit)]
+		private struct FloatIntUnion
+		{
+			[FieldOffset(0)]
+			public float f;
+
+			[FieldOffset(0)]
+			public int tmp;
+		}
+
+		// Finds the integer square root of a positive number  
+		public static long Isqrt(long num)
+		{
+			if (0 == num) { return 0; }  // Avoid zero divide  
+			long n = (num / 2) + 1;       // Initial estimate, never low  
+			long n1 = (n + (num / n)) / 2;
+			while (n1 < n)
+			{
+				n = n1;
+				n1 = (n + (num / n)) / 2;
+			} // end while  
+			return n;
+		} // end Isqrt() 
 	}
 }
