@@ -32,7 +32,7 @@ namespace WpfApplication1
 		class ResultPrinter : IResultPrinterControl
 		{
 			dynamic _resultPrinterImplementator;
-			object _syncer;
+			readonly object _syncer;
 
 			public ResultPrinter(dynamic resultPrinterImplementator)
 			{
@@ -107,8 +107,7 @@ namespace WpfApplication1
 		{
 			get
 			{
-				int i;
-				if (int.TryParse(((ListBoxItem)cmbConcurrentyCount.SelectedItem).Content.ToString(), out i))
+				if (int.TryParse(((ListBoxItem)cmbConcurrentyCount.SelectedItem).Content.ToString(), out int i))
 				{
 					return i;
 				}
@@ -126,8 +125,7 @@ namespace WpfApplication1
 
 		CancellationTokenSource GetCanellationtokenForButton(Button btn)
 		{
-			CancellationTokenSource token;
-			if (_cancellationTokenSource.TryGetValue(btn.Name, out token))
+			if (_cancellationTokenSource.TryGetValue(btn.Name, out CancellationTokenSource token))
 				return token;
 			else
 			{
