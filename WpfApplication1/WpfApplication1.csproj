@@ -21,7 +21,7 @@
       <Version>8.0.22</Version>
     </PackageReference>
     <PackageReference Include="Npgsql">
-      <Version>5.0.0</Version>
+      <Version>5.0.1.1</Version>
     </PackageReference>
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.100" />
     <PackageReference Include="System.Linq">
