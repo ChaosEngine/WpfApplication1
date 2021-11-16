@@ -303,7 +303,7 @@ namespace WpfApplication1
 						try
 						{
 							var data = new SqlTester(db_type, tst_type);
-							CancellationToken token;
+							CancellationToken token = default;
 							Dispatcher.Invoke(() =>
 							{
 								token = GetCanellationtokenForButton((Button)sender).Token;

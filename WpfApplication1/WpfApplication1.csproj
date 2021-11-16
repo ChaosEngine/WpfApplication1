@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <Authors>WpfApplication1</Authors>
     <Version>1.0.1</Version>
@@ -15,15 +15,15 @@
       <Version>6.4.4</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces">
-      <Version>5.0.0</Version>
+      <Version>6.0.0</Version>
     </PackageReference>
     <PackageReference Include="MySql.Data">
       <Version>8.0.27</Version>
     </PackageReference>
     <PackageReference Include="Npgsql">
-      <Version>5.0.10</Version>
+      <Version>6.0.0</Version>
     </PackageReference>
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.3" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.4" />
     <PackageReference Include="System.Linq">
       <Version>4.3.0</Version>
     </PackageReference>
@@ -46,7 +46,7 @@
       <Version>4.3.0</Version>
     </PackageReference>
     <PackageReference Include="System.Text.Json">
-      <Version>5.0.2</Version>
+      <Version>6.0.0</Version>
     </PackageReference>
   </ItemGroup>
 
