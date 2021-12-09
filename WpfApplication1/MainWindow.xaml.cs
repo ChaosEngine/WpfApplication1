@@ -18,7 +18,7 @@ using System.Windows.Threading;
 namespace WpfApplication1
 {
 	/// <summary>
-	/// Logika interakcji dla klasy MainWindow.xaml
+	/// Interaction logic for class MainWindow.xaml
 	/// </summary>
 	public partial class MainWindow : Window
 	{
