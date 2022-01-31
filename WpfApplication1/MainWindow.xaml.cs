@@ -279,7 +279,7 @@ namespace WpfApplication1
 			}
 		}
 
-		private void Button_Click_1(object sender, RoutedEventArgs e)
+		private async void Button_Click_1(object sender, RoutedEventArgs e)
 		{
 			if (((Button)sender).Content.ToString() == "Cancel")
 			{
@@ -296,49 +296,76 @@ namespace WpfApplication1
 				((Button)sender).Content = "Cancel";
 				int concurrentyCount = ConcurrencyCount.GetValueOrDefault(1);
 
-				Task.Factory.StartNew(() =>
+				await Task.Factory.StartNew(() =>
 				{
-					Parallel.For(0, concurrentyCount, async (i) =>
+					try
 					{
-						try
+						ParallelOptions po = new ParallelOptions();
+						CancellationToken token = default;
+						Dispatcher.Invoke(() =>
 						{
-							var data = new SqlTester(db_type, tst_type);
-							CancellationToken token;
-							Dispatcher.Invoke(() =>
+							token = GetCanellationtokenForButton((Button)sender).Token;
+							po.CancellationToken = token;
+						});
+						Parallel.For(0, concurrentyCount, po, async (i, pls) =>
+						{
+							try
 							{
-								token = GetCanellationtokenForButton((Button)sender).Token;
-								OutputResultControl.AppendText("starting test #" + i + " with " + data.DataBaseType.ToString() +
-									Environment.NewLine);
-							});
+								var data = new SqlTester(db_type, tst_type);
+								Dispatcher.Invoke(() =>
+								{
+									OutputResultControl.AppendText("starting test #" + i + " with " + data.DataBaseType.ToString() +
+										Environment.NewLine);
+								});
 
-							var result = await data.Execute(token);
+								var result = await data.Execute(token);
 
-							// Display the result. All is ok
-							Dispatcher.Invoke(() =>
-						{
-							OutputResultControl.Text = result.ToString();
+								// Display the result. All is ok
+								Dispatcher.Invoke(() =>
+								{
+									OutputResultControl.Text = result.ToString();
+								});
+							}
+							catch (OperationCanceledException)
+							{
+								pls.Stop();
+								Dispatcher.Invoke(() =>
+								{
+									OutputResultControl.Text = "cancelled";
+								});
+								return;
+							}
+							catch (Exception ex)
+							{
+								//Show error
+								Dispatcher.Invoke(() =>
+								{
+									OutputResultControl.Text = "Error: " + ex.Message;
+								});
+							}
 						});
-						}
-						catch (Exception ex)
-						{
-							//Show error
-							Dispatcher.Invoke(() =>
-						{
-							OutputResultControl.Text = "Error: " + ex.Message;
-						});
-						}
-					});
-					//All sub-task ended. Notify UI
-					Dispatcher.Invoke(() =>
-				{
-					((Button)sender).Content = prev;
-					var cts = GetCanellationtokenForButton((Button)sender);
-					if (cts.IsCancellationRequested)
-					{
-						cts.Dispose();
-						_cancellationTokenSource.Remove(((Button)sender).Name);
 					}
-				});
+					catch (OperationCanceledException)
+					{
+						Dispatcher.Invoke(() =>
+						{
+							OutputResultControl.Text = "cancelled";
+						});
+					}
+					finally
+					{
+						//All sub-task ended. Notify UI
+						Dispatcher.Invoke(() =>
+						{
+							((Button)sender).Content = prev;
+							var cts = GetCanellationtokenForButton((Button)sender);
+							if (cts.IsCancellationRequested)
+							{
+								cts.Dispose();
+								_cancellationTokenSource.Remove(((Button)sender).Name);
+							}
+						});
+					}
 				});
 			}
 			catch (Exception ex)
