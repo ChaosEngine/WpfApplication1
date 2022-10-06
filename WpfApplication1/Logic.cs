@@ -414,6 +414,20 @@ namespace WpfApplication1
 
 			using (var conn = new OracleConnection(ConfigurationManager.ConnectionStrings["OracleDbContext"].ConnectionString))
 			{
+				if (ConfigurationManager.AppSettings["OracleWalletLocation"] != null && OracleConfiguration.TnsAdmin == null)
+				{
+					//Enter directory where the tnsnames.ora and sqlnet.ora files are located
+					OracleConfiguration.TnsAdmin = ConfigurationManager.AppSettings["OracleWalletLocation"];
+
+					//Alternatively, connect descriptor and net service name entries can be placed in app itself
+					//To use, uncomment below and enter the DB machine port, hostname/IP, service name, and distinguished name
+					//Lastly, set the Data Source value to "autonomous"
+					//OracleConfiguration.OracleDataSources.Add("autonomous", "(description=(address=(protocol=tcps)(port=<PORT>)(host=<HOSTNAME/IP>))(connect_data=(service_name=<SERVICE NAME>))(security=(ssl_server_cert_dn=<DISTINGUISHED NAME>)))");                       
+
+					//Enter directory where wallet is stored locally
+					OracleConfiguration.WalletLocation = OracleConfiguration.TnsAdmin;
+				}
+
 				await conn.OpenAsync(token);
 
 				var sb = new StringBuilder(1000);
