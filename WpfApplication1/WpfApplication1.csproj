@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net7.0-windows</TargetFramework>
@@ -21,7 +21,7 @@
       <Version>8.0.33</Version>
     </PackageReference>
     <PackageReference Include="Npgsql">
-      <Version>7.0.2</Version>
+      <Version>7.0.4</Version>
     </PackageReference>
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.100" />
     <PackageReference Include="System.Linq">
