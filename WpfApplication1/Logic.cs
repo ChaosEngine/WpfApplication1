@@ -225,7 +225,7 @@ namespace WpfApplication1
 				var sb = new StringBuilder(100000);
 				using (MySqlCommand cmd = new MySqlCommand(data._sqlQuery, conn))
 				{
-					cmd.Prepare();
+                    await cmd.PrepareAsync();
 					cmd.CommandType = System.Data.CommandType.Text;
 
 					if (token.IsCancellationRequested)
@@ -261,7 +261,7 @@ namespace WpfApplication1
 				var sb = new StringBuilder(1000);
 				using (var cmd = new NpgsqlCommand(data._sqlQuery, conn))
 				{
-					cmd.Prepare();
+                    await cmd.PrepareAsync();
 					cmd.CommandType = System.Data.CommandType.Text;
 
 					if (token.IsCancellationRequested)
@@ -312,7 +312,7 @@ namespace WpfApplication1
 				var sb = new StringBuilder(1000);
 				using (var cmd = new SqlCommand(data._sqlQuery, conn))
 				{
-					cmd.Prepare();
+                    await cmd.PrepareAsync();
 					cmd.CommandType = CommandType.Text;
 
 					if (token.IsCancellationRequested)
@@ -455,7 +455,7 @@ namespace WpfApplication1
 					if (token.IsCancellationRequested)
 						return new StringBuilder("cancelled");
 
-					cmd.Prepare();
+                    await cmd.PrepareAsync();
 					cmd.CommandType = CommandType.Text;
 					using (var rdr = await cmd.ExecuteReaderAsync(token))
 					{
