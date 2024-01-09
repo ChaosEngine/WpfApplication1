@@ -404,7 +404,7 @@ namespace WpfApplication1
 			}
 		}
 
-		private void HandleWAlletInConnectionString(ReadOnlySpan<char> connectionString)
+		private void HandleWalletInConnectionString(ReadOnlySpan<char> connectionString)
 		{
             //WALLET_LOCATION=(SOURCE=(METHOD=file)(METHOD_DATA=(DIRECTORY=c:\\Users\\user\\.blablabla\\wallet)))
             int start = connectionString.IndexOf("DIRECTORY=");
@@ -444,7 +444,7 @@ namespace WpfApplication1
 			using (var conn = new OracleConnection(conn_str))
 			{
 				if (OracleConfiguration.TnsAdmin == null)
-					HandleWAlletInConnectionString(conn_str);
+					HandleWalletInConnectionString(conn_str);
 
 				await conn.OpenAsync(token);
 
