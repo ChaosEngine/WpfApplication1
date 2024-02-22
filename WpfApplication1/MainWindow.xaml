@@ -27,7 +27,7 @@
 				<ListBoxItem Content="GroupedView"/>
 				<ListBoxItem Content="Searcher"/>
 			</ComboBox>
-			<ComboBox x:Name="cmbConcurrentyCount" SelectedIndex="5" SelectionChanged="OnConcurrentyCount_SelectionChanged">
+			<ComboBox x:Name="cmbConcurrentyCount" SelectedIndex="5" SelectionChanged="OnConcurrentCount_SelectionChanged">
 				<ListBoxItem Content="1"/>
 				<ListBoxItem Content="4"/>
 				<ListBoxItem Content="8"/>

@@ -225,7 +225,7 @@ namespace WpfApplication1
 				var sb = new StringBuilder(100000);
 				using (MySqlCommand cmd = new MySqlCommand(data._sqlQuery, conn))
 				{
-					cmd.Prepare();
+                    await cmd.PrepareAsync();
 					cmd.CommandType = System.Data.CommandType.Text;
 
 					if (token.IsCancellationRequested)
@@ -261,7 +261,7 @@ namespace WpfApplication1
 				var sb = new StringBuilder(1000);
 				using (var cmd = new NpgsqlCommand(data._sqlQuery, conn))
 				{
-					cmd.Prepare();
+                    await cmd.PrepareAsync();
 					cmd.CommandType = System.Data.CommandType.Text;
 
 					if (token.IsCancellationRequested)
@@ -312,7 +312,7 @@ namespace WpfApplication1
 				var sb = new StringBuilder(1000);
 				using (var cmd = new SqlCommand(data._sqlQuery, conn))
 				{
-					cmd.Prepare();
+                    await cmd.PrepareAsync();
 					cmd.CommandType = CommandType.Text;
 
 					if (token.IsCancellationRequested)
@@ -404,6 +404,34 @@ namespace WpfApplication1
 			}
 		}
 
+		private void HandleWalletInConnectionString(ReadOnlySpan<char> connectionString)
+		{
+            //WALLET_LOCATION=(SOURCE=(METHOD=file)(METHOD_DATA=(DIRECTORY=c:\\Users\\user\\.blablabla\\wallet)))
+            int start = connectionString.IndexOf("DIRECTORY=");
+            if (start != -1)
+            {
+                start = start + "DIRECTORY=".Length;
+                int end = connectionString.Slice(start).IndexOf(")");
+                if (end != -1)
+                {
+                    var directory = connectionString.Slice(start, end);
+                    if (!directory.IsEmpty)
+                    {
+                        //Enter directory where the tnsnames.ora and sqlnet.ora files are located
+                        OracleConfiguration.TnsAdmin = directory.ToString();
+
+                        //Alternatively, connect descriptor and net service name entries can be placed in app itself
+                        //To use, uncomment below and enter the DB machine port, hostname/IP, service name, and distinguished name
+                        //Lastly, set the Data Source value to "autonomous"
+                        //OracleConfiguration.OracleDataSources.Add("autonomous", "(description=(address=(protocol=tcps)(port=<PORT>)(host=<HOSTNAME/IP>))(connect_data=(service_name=<SERVICE NAME>))(security=(ssl_server_cert_dn=<DISTINGUISHED NAME>)))");                       
+
+                        //Enter directory where wallet is stored locally
+                        OracleConfiguration.WalletLocation = OracleConfiguration.TnsAdmin;
+                    }
+                }
+            }
+        }
+
 		protected async override Task<StringBuilder> DoWorkOracle(SqlTester data, CancellationToken token)
 		{
 			if (token.IsCancellationRequested)
@@ -416,36 +444,7 @@ namespace WpfApplication1
 			using (var conn = new OracleConnection(conn_str))
 			{
 				if (OracleConfiguration.TnsAdmin == null)
-				{
-					//WALLET_LOCATION=(SOURCE=(METHOD=file)(METHOD_DATA=(DIRECTORY=c:\\Users\\user\\.blablabla\\wallet)))
-					string[] tab = conn_str
-						.Replace("\r", string.Empty)
-						.Replace("\n", string.Empty)
-						.Replace(")", string.Empty)
-						.Replace(" =", "=")
-						.Split("WALLET_LOCATION=", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-					if (tab.Length > 1)
-					{
-						tab = tab[1].Split("DIRECTORY=", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-						if (tab.Length > 0)
-						{
-							string directory = tab[1];
-							if (!string.IsNullOrEmpty(directory))
-							{
-								//Enter directory where the tnsnames.ora and sqlnet.ora files are located
-								OracleConfiguration.TnsAdmin = directory;
-
-								//Alternatively, connect descriptor and net service name entries can be placed in app itself
-								//To use, uncomment below and enter the DB machine port, hostname/IP, service name, and distinguished name
-								//Lastly, set the Data Source value to "autonomous"
-								//OracleConfiguration.OracleDataSources.Add("autonomous", "(description=(address=(protocol=tcps)(port=<PORT>)(host=<HOSTNAME/IP>))(connect_data=(service_name=<SERVICE NAME>))(security=(ssl_server_cert_dn=<DISTINGUISHED NAME>)))");                       
-
-								//Enter directory where wallet is stored locally
-								OracleConfiguration.WalletLocation = OracleConfiguration.TnsAdmin;
-							}
-						}
-					}
-				}
+					HandleWalletInConnectionString(conn_str);
 
 				await conn.OpenAsync(token);
 
@@ -455,7 +454,7 @@ namespace WpfApplication1
 					if (token.IsCancellationRequested)
 						return new StringBuilder("cancelled");
 
-					cmd.Prepare();
+                    await cmd.PrepareAsync();
 					cmd.CommandType = CommandType.Text;
 					using (var rdr = await cmd.ExecuteReaderAsync(token))
 					{

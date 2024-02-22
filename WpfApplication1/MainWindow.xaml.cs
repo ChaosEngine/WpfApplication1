@@ -290,11 +290,11 @@ namespace WpfApplication1
 			var prev = ((Button)sender).Content;
 			try
 			{
-				OutputResultControl.Text = "starting multipple concurrency test" + Environment.NewLine;
+				OutputResultControl.Text = "starting multiple concurrency test" + Environment.NewLine;
 				var db_type = SelectedDBaseType;
 				var tst_type = TestType;
 				((Button)sender).Content = "Cancel";
-				int concurrentyCount = ConcurrencyCount.GetValueOrDefault(1);
+				int concurrentCount = ConcurrencyCount.GetValueOrDefault(1);
 
 				await Task.Factory.StartNew(() =>
 				{
@@ -307,7 +307,7 @@ namespace WpfApplication1
 							token = GetCanellationtokenForButton((Button)sender).Token;
 							po.CancellationToken = token;
 						});
-						Parallel.For(0, concurrentyCount, po, async (i, pls) =>
+						Parallel.For(0, concurrentCount, po, async (i, pls) =>
 						{
 							try
 							{
@@ -463,7 +463,7 @@ namespace WpfApplication1
 			});
 		}
 
-		private void OnConcurrentyCount_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		private void OnConcurrentCount_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
 			int? i = this.ConcurrencyCount;
 			if (i.HasValue)
