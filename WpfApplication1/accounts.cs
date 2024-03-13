@@ -18,6 +18,5 @@ namespace WpfApplication1
         public string user_name { get; set; }
         public string clear_passwd { get; set; }
         public string passwd { get; set; }
-        public string dummy { get; set; }
     }
 }
