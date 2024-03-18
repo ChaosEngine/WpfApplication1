@@ -141,7 +141,7 @@ namespace WpfApplication1
 				case DatabaseTypeEnum.MYSQL:
 					_sqlQuery = string.Concat(@"select user_name, clear_passwd, user_id, now() 
                                                 from accounts
-                                                where clear_passwd like '%", _keyword2Search, "%'");
+                                                where MATCH(clear_passwd) AGAINST('*", _keyword2Search, "*' IN BOOLEAN MODE)");
 					result = await this.DoWorkMysql(this, token);
 					break;
 				case DatabaseTypeEnum.POSTGRES:
