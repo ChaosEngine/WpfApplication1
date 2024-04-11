@@ -190,7 +190,7 @@ namespace WpfApplication1
 			for (int i = 0; i < count; i++)
 			{
 				sb.Append(comma)
-					.Append(rdr[i].ToString());
+					.Append(rdr[i].ToString().ReplaceLineEndings(string.Empty));
 				comma = " | ";
 			}
 			sb.AppendLine();
