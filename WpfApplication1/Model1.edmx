@@ -13,7 +13,6 @@
           <Property Name="user_name" Type="varchar" MaxLength="100" />
           <Property Name="clear_passwd" Type="varchar" MaxLength="100" />
           <Property Name="passwd" Type="varchar" MaxLength="100" />
-          <Property Name="dummy" Type="varchar" MaxLength="100" />
         </EntityType>
         <EntityType Name="Blog">
           <Key>
@@ -87,7 +86,6 @@ warning 6013: The table/view 'test.dbo.domains' does not have a primary key defi
           <Property Name="user_name" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
           <Property Name="clear_passwd" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
           <Property Name="passwd" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
-          <Property Name="dummy" Type="String" MaxLength="100" Unicode="false" FixedLength="false" />
         </EntityType>
         <ComplexType Name="usp_GetDomains_Result">
           <Property Type="String" Name="domain" Nullable="true" MaxLength="100" />
@@ -139,7 +137,6 @@ warning 6013: The table/view 'test.dbo.domains' does not have a primary key defi
                 <ScalarProperty Name="user_name" ColumnName="user_name" />
                 <ScalarProperty Name="clear_passwd" ColumnName="clear_passwd" />
                 <ScalarProperty Name="passwd" ColumnName="passwd" />
-                <ScalarProperty Name="dummy" ColumnName="dummy" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
