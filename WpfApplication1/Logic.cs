@@ -254,9 +254,10 @@ namespace WpfApplication1
 			//string clientCertPath = @"PostgresqlClientCert\postgresql.pfx";
 			using (var conn = new NpgsqlConnection(ConfigurationManager.ConnectionStrings["Postgres"].ConnectionString))
 			{
-				conn.ProvideClientCertificatesCallback = MyProvideClientCertificatesCallback;
+				//conn.ProvideClientCertificatesCallback = MyProvideClientCertificatesCallback;
+				conn.SslClientAuthenticationOptionsCallback = MySslClientAuthenticationOptionsCallback;
 
-				await conn.OpenAsync(token);
+                await conn.OpenAsync(token);
 
 				var sb = new StringBuilder(1000);
 				using (var cmd = new NpgsqlCommand(data._sqlQuery, conn))
@@ -275,26 +276,52 @@ namespace WpfApplication1
 				}
 			}
 
-			void MyProvideClientCertificatesCallback(X509CertificateCollection clientCerts)
-			{
-				using (X509Store store = new X509Store(StoreLocation.CurrentUser))
-				{
-					store.Open(OpenFlags.ReadOnly | OpenFlags.OpenExistingOnly);
+			//void MyProvideClientCertificatesCallback(X509CertificateCollection clientCerts)
+			//{
+			//	using (X509Store store = new X509Store(StoreLocation.CurrentUser))
+			//	{
+			//		store.Open(OpenFlags.ReadOnly | OpenFlags.OpenExistingOnly);
 
-					var currentCerts = store.Certificates;
-					currentCerts = currentCerts.Find(X509FindType.FindByTimeValid, DateTime.Now, false);
-					currentCerts = currentCerts.Find(X509FindType.FindByIssuerName, "theBrain.ca", false);
-					currentCerts = currentCerts.Find(X509FindType.FindBySubjectName, Environment.MachineName, false);
-					if (currentCerts != null && currentCerts.Count > 0)
-					{
-						var cert = currentCerts[0];
-						clientCerts.Add(cert);
-					}
-				}
-			}
+			//		var currentCerts = store.Certificates;
+			//		currentCerts = currentCerts.Find(X509FindType.FindByTimeValid, DateTime.Now, false);
+			//		currentCerts = currentCerts.Find(X509FindType.FindByIssuerName, "theBrain.ca", false);
+			//		currentCerts = currentCerts.Find(X509FindType.FindBySubjectName, Environment.MachineName, false);
+			//		if (currentCerts != null && currentCerts.Count > 0)
+			//		{
+			//			var cert = currentCerts[0];
+			//			clientCerts.Add(cert);
+			//		}
+			//	}
+			//}
 		}
 
-		protected override async Task<StringBuilder> DoWorkMssql(SqlTester data, CancellationToken token)
+        private void MySslClientAuthenticationOptionsCallback(SslClientAuthenticationOptions options)
+        {
+			options.LocalCertificateSelectionCallback = MyLocalCertificateSelectionCallback;
+        }
+
+        private X509Certificate MyLocalCertificateSelectionCallback(object sender, string targetHost,
+			X509CertificateCollection localCertificates, X509Certificate remoteCertificate, string[] acceptableIssuers)
+        {
+            using (X509Store store = new X509Store(StoreLocation.CurrentUser))
+            {
+                store.Open(OpenFlags.ReadOnly | OpenFlags.OpenExistingOnly);
+
+                var currentCerts = store.Certificates;
+                currentCerts = currentCerts.Find(X509FindType.FindByTimeValid, DateTime.Now, false);
+                currentCerts = currentCerts.Find(X509FindType.FindByIssuerName, "theBrain.ca", false);
+                currentCerts = currentCerts.Find(X509FindType.FindBySubjectName, Environment.MachineName, false);
+                if (currentCerts != null && currentCerts.Count > 0)
+                {
+                    X509Certificate2 cert = currentCerts[0];
+					return cert;
+                }
+            }
+
+			return null;
+        }
+
+        protected override async Task<StringBuilder> DoWorkMssql(SqlTester data, CancellationToken token)
 		{
 			if (token.IsCancellationRequested)
 				return new StringBuilder("cancelled");
