@@ -24,9 +24,6 @@
       <Version>9.0.4</Version>
     </PackageReference>
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.0" />
-    <PackageReference Include="System.Text.Json">
-      <Version>10.0.0-rc.2.25502.107</Version>
-    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
