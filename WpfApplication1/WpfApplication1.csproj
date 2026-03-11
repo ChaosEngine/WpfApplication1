@@ -15,7 +15,7 @@
       <Version>6.5.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces">
-      <Version>10.0.3</Version>
+      <Version>10.0.4</Version>
     </PackageReference>
     <PackageReference Include="MySql.Data">
       <Version>9.6.0</Version>
@@ -25,7 +25,7 @@
     </PackageReference>
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.100" />
     <PackageReference Include="System.Text.Json">
-      <Version>10.0.3</Version>
+      <Version>10.0.4</Version>
     </PackageReference>
   </ItemGroup>
 
