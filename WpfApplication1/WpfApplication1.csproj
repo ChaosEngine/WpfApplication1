@@ -23,7 +23,7 @@
     <PackageReference Include="Npgsql">
       <Version>10.0.3</Version>
     </PackageReference>
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.300" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.301" />
     <PackageReference Include="System.Text.Json">
       <Version>10.0.11</Version>
     </PackageReference>
