@@ -25,7 +25,7 @@
     </PackageReference>
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.400" />
     <PackageReference Include="System.Text.Json">
-      <Version>10.0.13</Version>
+      <Version>10.0.14</Version>
     </PackageReference>
   </ItemGroup>
 
